@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # my-project
 
 > A Mpvue project
@@ -35,3 +36,7 @@ npm run build --report
 ```
 
 For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+=======
+# -
+mpvue
+>>>>>>> 406c5f9b23e332ee47f5890463c92001e728af37
