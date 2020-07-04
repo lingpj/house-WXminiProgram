@@ -31,6 +31,7 @@
           <div class="blockItem" v-for="(block,ind) in item.list " :style="{background:block.color}"  @click="go2Detail(item,block)" :key="ind">
             <p>{{block.room}}</p>
             <span>{{block.built_up_area}}m²</span>
+            <img v-if="block.url" class="vr" src="/static/images/vr.png" alt="">
           </div>
         </div>
       </div>
@@ -128,6 +129,13 @@ export default {
 
 <style lang="scss" scoped>
 .container {
+  .vr{
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
   .addImg{
     width: 50px;
     height: 50px;;
@@ -202,6 +210,7 @@ export default {
       flex-wrap: wrap;
       align-items: center;
       .blockItem{
+        position: relative;
         width: 75px;
         height: 45px;
         background: rgb(229, 138, 154);

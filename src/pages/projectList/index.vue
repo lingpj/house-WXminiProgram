@@ -89,7 +89,7 @@ export default {
       // console.log(data)
       // console.log(JSON.stringify(data))
        wx.setStorageSync('projectListData',JSON.stringify(data))
-      wx.navigateTo({ url: "/pages/projectDetail/main?data=projectListData" });
+      wx.navigateTo({ url: "/pages/projectDetail/main?data=projectListData&data2="+JSON.stringify(data) });
     }
   }
 };

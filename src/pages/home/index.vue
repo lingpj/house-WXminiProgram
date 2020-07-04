@@ -141,6 +141,14 @@ export default {
   methods: {
     // 客户管理
     go2CustomeHandle(){
+      console.log(!this.loginFlag)
+      if(!this.loginFlag){
+        wx.showToast({title: '请先登录！',icon: "none",duration: 1000}) 
+        wx.switchTab({
+          url: '/pages/mine/main' 
+        })
+        return
+      }
       wx.setStorageSync("customeUrl",('https://pwmall.parkwing.cn/01/#/home?token='+this.openId));
       wx.navigateTo({ url: "/pages/VR/main?target=1" });
     },

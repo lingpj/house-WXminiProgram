@@ -99,8 +99,6 @@
             <div class="floor">{{item.floor}}</div>
             <div class="blockArea" @click="blockAreaHandle(room)" v-for="(room,index2) in item.list" :key="index2">
               <div class="area">{{room.room}} | {{room.built_up_area}}m²</div>
-              <!-- <div class="rent">{{room.rent}}m²/天</div> -->
-              <!-- <div class="rent">详情咨询招商</div> -->
             </div>
          </div>
       </div>
@@ -149,13 +147,35 @@ export default {
   mounted() {
   },
   onLoad(options){
-    console.log(options)
+    console.log('进来了',options)
     // console.log(JSON.parse(options.data))
     var self =this
     // 被分享进来
     new Promise((resolve,reject)=>{
-      if(Object.keys(options).length >0 || options.data == 'projectListData'){
-        if( options.data == 'projectListData'){
+     
+      if(Object.keys(options).length >0 || options.data == 'projectListData' ){
+         console.log('1')
+        if( options.data == 'projectListData' || options.projectId){
+          console.log('4')
+
+          
+          if(options.projectId){
+            self.$http.get({
+            url: "/park/info",
+            data: { 
+                  id:options.projectId,
+                  page:1,
+                  limit:10,
+                }
+            })
+            .then(res => {
+              console.log('res:',res)
+                self.projectInfo = res.list[0]
+                self.imgUrls = self.projectInfo.imageList.map(item =>item.url)
+                resolve()
+            })
+            return
+          }
           wx.getStorage({
             key: 'projectListData',
               success (res) {
@@ -163,9 +183,14 @@ export default {
               self.projectInfo = JSON.parse(res.data)
               self.imgUrls = self.projectInfo.imageList.map(item =>item.url)
               resolve()
+            },
+            fail(err){
+              console.log('报错了，',err)
+              
             }
           })
         }else{
+          console.log('5')
            try {
               
               self.projectInfo = JSON.parse(options.data)
@@ -178,6 +203,8 @@ export default {
            resolve()
         }
       }else{
+
+        console.log('2')
         
         wx.getStorage({
           key: 'projectInfo',
@@ -191,6 +218,7 @@ export default {
         })
       }
     }).then(res=>{
+      console.log('3')
       self.getEmptyHouseList()
       self.$QQMapWX.geocoder({
         address:self.projectInfo.address,
@@ -346,6 +374,17 @@ export default {
       console.log('----',this.projectInfo)
       var string = JSON.stringify(this.projectInfo)
       wx.navigateTo({url:'/pages/subscribe/main?data1='+string.slice(0,string.length / 2)+'&data2='+string.slice(string.length / 2)})
+    }
+  },
+  onShareAppMessage: function (res) {
+    console.log(res)
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      // console.log(res.target)
+    }
+    return {
+      title: 123,
+      path: '/pages/projectDetail/main?projectId='+this.projectInfo.itemid,
     }
   }
 };
