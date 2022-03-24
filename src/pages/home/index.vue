@@ -1,41 +1,53 @@
 <template>
-  <div class="container"  >
-    <div class="projectTitle"   @click="changeProject">{{projectInfo.item || '暂无'}}
-      <img src="/static/images/arrow-2.png">
-    </div>
+  <div class="container">
+    <picker
+      mode="selector"
+      class="projectTitle"
+      :range="projectNameList"
+      :value="index"
+      @change="bindchange"
+    >
+      {{ projectInfo.item || '暂无' }}
+      <img src="/static/images/arrow-2.png" />
+    </picker>
+    <!-- <div class="projectTitle" @click="changeProject">
+      {{ projectInfo.item || '暂无' }}
+      <img src="/static/images/arrow-2.png" />
+    </div> -->
     <div class="btnGroup">
-      <div  @click="go2RentHandle">
-        <img src="/static/images/app.png" alt="">
+      <div @click="go2RentHandle">
+        <img src="/static/images/app.png" alt="" />
         <p>租控管理</p>
       </div>
       <div @click="go2ShareHandle">
-        <img src="/static/images/zhuanfa.png" alt="">
+        <img src="/static/images/zhuanfa.png" alt="" />
         <p>推广分享</p>
       </div>
       <div @click="go2ProjectHandle">
-        <img src="/static/images/parklist.png" alt="">
+        <img src="/static/images/parklist.png" alt="" />
         <p>预约看房</p>
       </div>
       <div @click="go2CustomeHandle">
-        <img src="/static/images/green.png" alt="">
+        <img src="/static/images/green.png" alt="" />
         <p>客户管理</p>
       </div>
     </div>
     <div class="myShare">
-      <h2>我的分享
+      <h2>
+        我的分享
         <span @click="go2ShareTop">分享排行榜></span>
       </h2>
       <div class="shareItem">
         <div>
-          <p>{{myShareInfo.tenDays || 0}}</p>
+          <p>{{ myShareInfo.tenDays || 0 }}</p>
           <span>近10天浏览人数</span>
         </div>
         <div>
-          <p>{{myShareInfo.thirtyDays|| 0}}</p>
+          <p>{{ myShareInfo.thirtyDays || 0 }}</p>
           <span>近30天浏览人数</span>
         </div>
         <div>
-          <p>{{myShareInfo.yeardays|| 0}}</p>
+          <p>{{ myShareInfo.yeardays || 0 }}</p>
           <span>近一年浏览人数</span>
         </div>
       </div>
@@ -49,62 +61,65 @@ var qqmapsdk;
 export default {
   name: "",
   components: {},
-  data() {
+  data () {
     return {
-      topPadding:0,
+      projectNameList: [],
+      index: 0,
+      topPadding: 0,
       // 当前项目信息
-      projectInfo:{
-        item:'暂无'
+      projectInfo: {
+        item: '暂无'
       },
       // 项目列表
-      projectList:[],
-      openId:'',
+      projectList: [],
+      openId: '',
       // 我的分享信息概况
-      myShareInfo:{},
-      loginFlag:false
+      myShareInfo: {},
+      loginFlag: false
     };
   },
-  onShow(){
-     
+  onShow () {
+
     var self = this
     console.log('查看Login')
-     wx.getStorage({
-        key: "login",
-        success(res) {
-          console.log('login >>',res);
-          if(res.data){
-            self.loginFlag =true
-          }else{
-            self.loginFlag =false
-            // wx.switchTab({ url: "/pages/mine/main" });
-          }
-        },
-        fail(res) {
-          console.log('login fail >>>',res)
-          self.loginFlag =false
-          //  wx.switchTab({ url:  "/pages/mine/main" });
-        },
+    wx.getStorage({
+      key: "login",
+      success (res) {
+        console.log('login >>', res);
+        if (res.data) {
+          self.loginFlag = true
+        } else {
+          self.loginFlag = false
+          // wx.switchTab({ url: "/pages/mine/main" });
+        }
+      },
+      fail (res) {
+        console.log('login fail >>>', res)
+        self.loginFlag = false
+        //  wx.switchTab({ url:  "/pages/mine/main" });
+      },
     });
-    
-      wx.getSystemInfo({
-          success: function (res) {
-              console.log('res',res)
-              console.log(res.statusBarHeight, 'statusBarHeight')
-              self.topPadding = res.safeArea.top +44
-          }
-      })
+
+    wx.getSystemInfo({
+      success: function (res) {
+        console.log('res', res)
+        console.log(res.statusBarHeight, 'statusBarHeight')
+        self.topPadding = res.safeArea.top + 44
+      }
+    })
   },
-  async mounted() {
-    
-    var self =this
+  async mounted () {
+
+    var self = this
     // 拉取项目列表数据
     var r = await this.$http.get({
       url: "/park/info"
     });
     this.projectList = r.list;
+    this.projectNameList = this.projectList.map((item) => item.item)
     // 登录获取openid
     wx.login({
-      success(res) {
+      success (res) {
         console.log(res);
         if (res.code) {
           self.$http
@@ -125,36 +140,43 @@ export default {
       }
     });
     wx.getStorage({
-        key: "projectInfo",
-        success(res) {
-          console.log(res);
-          self.projectInfo = JSON.parse(res.data)
-        },
-        fail(res) {
-          self.projectInfo.item = '暂无'
-        },
-        complete(){
-          self.getRecentShare()
-        }
+      key: "projectInfo",
+      success (res) {
+        console.log(res);
+        self.projectInfo = JSON.parse(res.data)
+      },
+      fail (res) {
+        self.projectInfo.item = '暂无'
+      },
+      complete () {
+        self.getRecentShare()
+      }
     });
   },
   methods: {
+    bindchange (e) {
+      const self = this
+      this.index = e.target.value
+      self.projectInfo = self.projectList[this.index]
+      wx.setStorageSync("projectInfo", JSON.stringify(self.projectList[this.index]));
+      self.getRecentShare()
+    },
     // 客户管理
-    go2CustomeHandle(){
+    go2CustomeHandle () {
       console.log(!this.loginFlag)
-      if(!this.loginFlag){
-        wx.showToast({title: '请先登录！',icon: "none",duration: 1000}) 
+      if (!this.loginFlag) {
+        wx.showToast({ title: '请先登录！', icon: "none", duration: 1000 })
         wx.switchTab({
-          url: '/pages/mine/main' 
+          url: '/pages/mine/main'
         })
         return
       }
-      wx.setStorageSync("customeUrl",('https://pwmall.parkwing.cn/01/#/home?token='+this.openId));
+      wx.setStorageSync("customeUrl", ('https://pwmall.parkwing.cn/01/#/home?token=' + this.openId));
       wx.navigateTo({ url: "/pages/VR/main?target=1" });
     },
     // 分享排行榜
-    go2ShareTop(){
-      if(!this.projectInfo.itemid){
+    go2ShareTop () {
+      if (!this.projectInfo.itemid) {
         wx.showToast({
           title: '请先选择项目！',
           icon: "none",
@@ -162,60 +184,60 @@ export default {
         })
         return
       }
-      
+
       var params = JSON.stringify(this.myShareInfo.list)
       params = encodeURIComponent(params)
       console.log(params)
-      wx.navigateTo({ url: "/pages/shareTop/main?data="+params });
+      wx.navigateTo({ url: "/pages/shareTop/main?data=" + params });
     },
     // 推广分享
-    go2ShareHandle(){
-      if(!this.loginFlag){
-        wx.showToast({title: '请先登录！',icon: "none",duration: 1000}) 
+    go2ShareHandle () {
+      if (!this.loginFlag) {
+        wx.showToast({ title: '请先登录！', icon: "none", duration: 1000 })
         wx.switchTab({
-          url: '/pages/mine/main' 
+          url: '/pages/mine/main'
         })
         return
       }
-      if(!this.projectInfo.itemid){
-        wx.showToast({title: '请先选择项目！',icon: "none",duration: 1000})
+      if (!this.projectInfo.itemid) {
+        wx.showToast({ title: '请先选择项目！', icon: "none", duration: 1000 })
         return
       }
-      wx.navigateTo({ url: "/pages/shareRecord/main?openId="+this.openId+'&itemId='+this.projectInfo.itemid});
+      wx.navigateTo({ url: "/pages/shareRecord/main?openId=" + this.openId + '&itemId=' + this.projectInfo.itemid });
     },
     // 我的分享
-    getRecentShare(){
+    getRecentShare () {
       var self = this
-      if(!self.projectInfo.itemid || !self.openId){
+      if (!self.projectInfo.itemid || !self.openId) {
         return
       }
       self.$http
         .post({
           url: "/share_record/total",
-          data: { 
+          data: {
             itemid: self.projectInfo.itemid,
             openid: self.openId
           }
         })
         .then(res => {
           console.log(res);
-           self.myShareInfo = res
+          self.myShareInfo = res
         });
     },
     // 租控管理
-    go2RentHandle() {
-      if(!this.loginFlag){
-        wx.showToast({title: '请先登录！',icon: "none",duration: 1000})
+    go2RentHandle () {
+      if (!this.loginFlag) {
+        wx.showToast({ title: '请先登录！', icon: "none", duration: 1000 })
         wx.switchTab({
-          url: '/pages/mine/main' 
+          url: '/pages/mine/main'
         })
-      }else if(!this.projectInfo.itemid){
-        wx.showToast({title: '请先选择项目！',icon: "none",duration: 1000})
-      }else if(this.projectInfo.item.length>2){
+      } else if (!this.projectInfo.itemid) {
+        wx.showToast({ title: '请先选择项目！', icon: "none", duration: 1000 })
+      } else if (this.projectInfo.item.length > 2) {
         var self = this;
-        wx.setStorageSync("projectInfo",JSON.stringify(self.projectList.find(item => item.itemid == self.projectInfo.itemid)));
+        wx.setStorageSync("projectInfo", JSON.stringify(self.projectList.find(item => item.itemid == self.projectInfo.itemid)));
         wx.navigateTo({ url: "/pages/houseList/main" });
-      }else{
+      } else {
         wx.showToast({
           title: '请先选择项目',
           icon: "none",
@@ -224,20 +246,21 @@ export default {
       }
     },
     // 选项目
-    changeProject(){
+    changeProject () {
       var self = this
+      console.log(self.projectList.map(item => item.item))
       wx.showActionSheet({
-        itemList: self.projectList.map(item => item.item),
-        success(res) {
+        itemList: self.projectList.map(item => item.item).slice(0, 3),
+        success (res) {
           console.log(res.tapIndex);
           // 存储项目
           self.projectInfo = self.projectList[res.tapIndex]
-          wx.setStorageSync("projectInfo",JSON.stringify(self.projectList[res.tapIndex]));
+          wx.setStorageSync("projectInfo", JSON.stringify(self.projectList[res.tapIndex]));
           self.getRecentShare()
         }
       });
     },
-    go2ProjectHandle(){
+    go2ProjectHandle () {
       // wx.navigateTo({ url: "/pages/subscribe/main" });
       wx.navigateTo({ url: "/pages/projectList/main" });
     },
@@ -249,73 +272,72 @@ export default {
 .container {
   padding: 0 15px 0 15px;
   position: relative;
-  .projectTitle{
+  .projectTitle {
     // position: absolute;
     margin: 5px 0 10px 0;
     left: 15px;
     font-weight: bold;
     font-size: 14px;
-    img{
+    img {
       width: 10px;
       height: 10px;
     }
   }
-  .btnGroup{
+  .btnGroup {
     display: flex;
-    &>div{
+    & > div {
       width: 25%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      img{
+      img {
         width: 40px;
         height: 40px;
       }
-      p{
+      p {
         font-size: 14px;
         margin-top: 10px;
       }
     }
   }
-  .myShare{
+  .myShare {
     margin: 20px 0;
-     border: 1px solid #eee;
-      border-radius: 5px;
-      box-shadow: 0 0 10px #eee;
-      padding: 15px 10px;
-    h2{
+    border: 1px solid #eee;
+    border-radius: 5px;
+    box-shadow: 0 0 10px #eee;
+    padding: 15px 10px;
+    h2 {
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 15px;
-      span{
+      span {
         font-size: 12px;
         color: gray;
         float: right;
         font-weight: normal;
       }
     }
-    .shareItem{
+    .shareItem {
       display: flex;
-      &>div{
+      & > div {
         display: flex;
         flex: 1;
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
-         p{
-            font-size: 16px;
-            font-weight: bold;
-            text-align: center;
-            
-          }
-          span{
-              font-size: 12px ;
-              margin-top: 10px;
-              color:gray;
-            }
+        p {
+          font-size: 16px;
+          font-weight: bold;
+          text-align: center;
+        }
+        span {
+          font-size: 12px;
+          margin-top: 10px;
+          color: gray;
+        }
       }
-      &>div:nth-child(2){
+      & > div:nth-child(2) {
         border-left: 1px solid #eee;
         border-right: 1px solid #eee;
       }
